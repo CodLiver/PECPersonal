@@ -7,10 +7,12 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.servlet.http.HttpSession;
 
 import model.TDepartment;
 import model.TEmployee;
 import model.TEmployeeRole;
+import model.TRequest;
 
 /**
  * Session Bean implementation class HolidayBookingAppEJB
@@ -30,15 +32,27 @@ public class HolidayBookingAppBean implements HolidayBookingAppBeanRemote {
 	EntityManager entityManager;
 
 	@Override
-	public boolean login(String email, String password) {
-		List queryResults = entityManager
-				.createQuery("SELECT e FROM TEmployee e WHERE e.email = :email and e.password = :password and (e.employeeRole = 0 or e.employeeRole = 1)")
+	public int login(String email, String password) {
+		List queryResultsHead = entityManager
+				.createQuery("SELECT e FROM TEmployee e WHERE e.email = :email and e.password = :password and (e.employeeRole < 2)")
 				.setParameter("email", email).setParameter("password", password).getResultList();
 		//0 or 1 to check access privileges
-		if (queryResults.isEmpty())
-			return false;
-		else
-			return true;
+		if (queryResultsHead.isEmpty()) {
+			List queryResultsEmp = entityManager
+			.createQuery("SELECT e FROM TEmployee e WHERE e.email = :email and e.password = :password and (e.employeeRole >= 2)")
+			.setParameter("email", email).setParameter("password", password).getResultList();
+			
+			if (queryResultsEmp.isEmpty()) {
+				return 0;
+			}
+			else {
+				return 2;
+			}
+		}
+		else 
+		{
+			return 1;
+		}
 	}
 	
 	@Override
@@ -103,6 +117,20 @@ public class HolidayBookingAppBean implements HolidayBookingAppBeanRemote {
 		}
 		return allEmployeesDTO;
 	}
+	
+	@Override
+	public List<RequestDTO> getAllRequestperEmp(String email) {
+		EmployeeDTO thatEmployee = getEmployeeByEmail(email);
+		List<TRequest> allRequests = entityManager.createNamedQuery("TRequest.findAll").getResultList();
+		List<RequestDTO> allRequestsDTO = new ArrayList<>();
+		for (TRequest r : allRequests) {
+			if (thatEmployee.getId() == r.getId_emp().getId())
+				allRequestsDTO.add(new RequestDTO(r.getId(), r.getBegin_date(), r.getEnd_date(), r.getDuration(), r.getHoliday_entitlement(), r.getHoliday_remaining(),r.getId_emp().getId() , r.getPeak_time(),
+						r.getStatus()));
+
+		}
+		return allRequestsDTO;
+	}
 
 	@Override
 	public boolean addNewEmployee(EmployeeDTO newEmp) {
@@ -113,6 +141,24 @@ public class HolidayBookingAppBean implements HolidayBookingAppBeanRemote {
 					newEmp.getLastName(), newEmp.getPhoneNumber(), newEmp.getHireDate(), newEmp.getSalary(),
 					newEmp.getHomeAddress(), department, employeeRole);
 			entityManager.persist(newEmployee);
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	@Override
+	public boolean addNewRequest(RequestDTO newReq) {
+		try {			
+			TEmployee employee_id = entityManager.find(TEmployee.class, newReq.getId_emp());
+			//TEmployeeRole employeeRole = entityManager.find(TEmployeeRole.class, newEmp.getEmpRoleId());
+			//TDepartment department = entityManager.find(TDepartment.class, newEmp.getDepId());
+			TRequest newRequest = new TRequest(
+					newReq.getBegin_date(), newReq.getEnd_date(), newReq.getDuration(),
+					newReq.getHoliday_entitlement(), newReq.getHoliday_remaining(), employee_id, newReq.getPeak_time(),
+					newReq.getStatus());
+			entityManager.persist(newRequest);
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();

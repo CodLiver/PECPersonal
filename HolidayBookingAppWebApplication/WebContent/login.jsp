@@ -6,6 +6,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Holiday Booking Application</title>
+<link rel="stylesheet" href="css/bootstrap_3.7.css">
 </head>
 <body>
 	<h1>Holiday Booking Application</h1>
@@ -19,13 +20,23 @@
 	%>
 	<%
 		String isLogin = (String) session.getAttribute("username");
-		if (isLogin != null) {
+		if (isLogin == "admin") {
 			response.sendRedirect("EmployeesServlet");
+		}else if(isLogin == "employee") {
+			response.sendRedirect("EmployeesLoginServlet");
 		}
 	%>
-	<form method="POST" action="HolidayBookingAppServlet">
-		Email:<input type="text" name="email" /> Password:<input type="text"
-			name="password" /> <input type="submit" value="Login" />
-	</form>
+		<div class="col-sm-3 first_cont">
+		<form class="form-signin" action="HolidayBookingAppServlet">
+			<input type="text" class="form-control" name="email"
+				placeholder="Email address" required>
+			<p></p>
+			<input type="password" class="form-control" name="password"
+				placeholder="Password" required>
+			<p></p>
+			<button class="btn-lg btn-primary btn-block" type="submit"
+				value="Login">Sign in</button>
+		</form>
+	</div>
 </body>
 </html>

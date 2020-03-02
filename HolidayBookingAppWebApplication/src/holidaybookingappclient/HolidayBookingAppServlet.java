@@ -40,13 +40,19 @@ public class HolidayBookingAppServlet extends HttpServlet {
 			throws ServletException, IOException {
 		PrintWriter out = response.getWriter();
 		try {
-			boolean result = holidayBookingAppBean.login(request.getParameter("email"),
+			int result = holidayBookingAppBean.login(request.getParameter("email"),
 					request.getParameter("password"));
-			if (result) {
+			if (result==1) {
 				HttpSession session = request.getSession(false);
 				//save message in session
 				session.setAttribute("username", "admin");
+				session.setAttribute("email", request.getParameter("email"));//maybe more?
 				response.sendRedirect("EmployeesServlet");
+			} else if(result==2) {
+				HttpSession session = request.getSession(false);
+				session.setAttribute("username", "employee");
+				session.setAttribute("email", request.getParameter("email"));//maybe more?
+				response.sendRedirect("EmployeesLoginServlet");	
 			} else {
 				request.setAttribute("errorLoginMessage", "Invalid username, password or employee role! Please try again.");
 				request.getRequestDispatcher("/login.jsp").forward(request, response);

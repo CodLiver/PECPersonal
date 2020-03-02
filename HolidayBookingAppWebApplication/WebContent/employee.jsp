@@ -4,34 +4,38 @@
 <%@ page import="ejbholidaybookingapp.EmployeeDTO"%>
 <!DOCTYPE html>
 <html>
+<head>
+<link rel="stylesheet" href="css/bootstrap_3.7.css">
+</head>
+
 <body>
 	<div>
-	<%
+		<%
 		String isLogin = (String) session.getAttribute("username");
 		if (isLogin != "admin") {
 			response.sendRedirect("HolidayBookingAppServlet");
 			//response.sendRedirect("/login.jsp");
 		}
 	%>
-		<div>
-			<h3>Employees</h3>
+		<div class="row">
+			<div class="col-md-6">
+				<h3>Employees</h3>
+			</div>
 		</div>
-		<!-- 		<form method="POST" action="NewEmployeeServlet">
-			<input type="submit" value="New employee" />
-		</form> -->
 
 		<div>
-			<a href="NewEmployeeServlet"> Add New Employee</a>
+			<a href="NewEmployeeServlet"><button class="btn btn-warning">
+					Add New Employee</button></a>
 		</div>
 	</div>
-	<table>
+	<table class="table table-bordered table-striper table-hover">
 		<tr>
 			<th>ID</th>
 			<th>First_name</th>
 			<th>Last_name</th>
 			<th>Email</th>
 			<th>Department</th>
-			<th>Actions</th>
+			<th class="text-center">Actions</th>
 		</tr>
 		<%
 			List<EmployeeDTO> allEmployees = (List) request.getAttribute("allEmployees");
@@ -43,9 +47,11 @@
 			<td><%=e.getLastName()%></td>
 			<td><%=e.getEmail()%></td>
 			<td><%=e.getDepName()%></td>
-			<td><a href="EditEmployeeServlet?id=<%=e.getId()%>">Edit</a></td>
+			<td><a href="EditEmployeeServlet?id=<%=e.getId()%>"><button
+						class="btn btn-warning">Edit</button></a></td>
 			<td></td>
-			<td><a href="DeleteEmployeeServlet?id=<%=e.getId()%>">Delete</a></td>
+			<td><a href="DeleteEmployeeServlet?id=<%=e.getId()%>"><button
+						class="btn btn-warning">Delete</button></a></td>
 		</tr>
 		<%
 			}
