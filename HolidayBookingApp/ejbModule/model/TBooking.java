@@ -7,41 +7,41 @@ import javax.persistence.*;
 
 
 @Entity
-@Table(name = "holiday_request")
-@NamedQuery(name = "TRequest.findAll", query = "SELECT r FROM TRequest r")
-public class TRequest implements Serializable {
+@Table(name = "holiday_booking")
+@NamedQuery(name = "TBooking.findAll", query = "SELECT b FROM TBooking b")
+public class TBooking implements Serializable {
 	private static final long serialVersionUID = 1L; 
 
-	public TRequest(String begin_date, String end_date, int duration, int holiday_remaining, TEmployee id_emp, int peak_time,
-			int status) {
+	public TBooking(String begin_date, String end_date, int duration, int holiday_remaining, TEmployee id_emp, TRequest id_req,
+			TDepartment id_dep) {
 		//maybe the need of TEmployee id_emp
 		this.begin_date = begin_date;
 		this.end_date = end_date;
 		this.duration = duration;
 		this.holiday_remaining = holiday_remaining;
 		this.id_emp = id_emp;
-		this.peak_time = peak_time;
-		this.status = status;
+		this.id_req = id_req;
+		this.id_dep = id_dep;
 	}
 	
-	public TRequest() {
+	public TBooking() {
 	}
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "ID_REQ")
+	@Column(name = "ID_BOOKING")
 	private int Id;
 	
-	@Column(name = "BEGIN_DATE")
+	@Column(name = "BOOKING_BEGIN_DATE")
 	private String begin_date;
 	
-	@Column(name = "END_DATE")
+	@Column(name = "BOOKING_END_DATE")
 	private String end_date;
 	
-	@Column(name = "DURATION")
+	@Column(name = "BOOKING_DURATION")
 	private int duration;
 	
-	@Column(name = "HOL_DAYS_REMAINING")
+	@Column(name = "CONF_HOL_REM")
 	private int holiday_remaining;
 	
 	//@Column(name = "ID_EMP")
@@ -50,17 +50,15 @@ public class TRequest implements Serializable {
 	private TEmployee id_emp;
 	//add class change
 	
-	//@ManyToOne(fetch = FetchType.EAGER)
-	//@JoinColumn(name = "ID_PEAK_TIME", nullable = false)
-	@Column(name = "ID_PEAK_TIME")
-	private int peak_time;
+	@OneToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "ID_REQ", nullable = false)
+	private TRequest id_req;
 	//add class change
 	
 
-	//@ManyToOne(fetch = FetchType.EAGER)
-	//@JoinColumn(name = "ID_STATUS", nullable = false)
-	@Column(name = "ID_STATUS")
-	private int status;
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "ID_DEP", nullable = false)
+	private TDepartment id_dep;
 	//add class change
 	
 	
@@ -112,21 +110,21 @@ public class TRequest implements Serializable {
 		this.id_emp = id_emp;
 	}
 	
-	public int getPeak_time() {
+	public TRequest getRequest() {
 		//maybe inside changes.
-		return peak_time;
+		return id_req;
 	}
 
-	public void setPeak_time(int peak_time) {
-		this.peak_time = peak_time;
+	public void setRequest(TRequest id_req) {
+		this.id_req = id_req;
 	}
 
-	public int getStatus() {
-		return status;
+	public TDepartment getDepartment() {
+		return id_dep;
 	}
 
-	public void setStatus(int status) {
-		this.status = status;
+	public void setDepartment(TDepartment id_dep) {
+		this.id_dep = id_dep;
 	}
 	
 }

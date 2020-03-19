@@ -9,9 +9,11 @@ public interface HolidayBookingAppBeanRemote {
 	List<RequestDTO> getAllRequestperEmp(String email);
 	EmployeeDTO getEmployeeByEmail(String email);
 	EmployeeDTO getEmployeeById(int id);
+	List<BookingDTO> getAllBookingsperEmp(String email);
 	List<EmployeeDTO> getAllEmployees();
 	List<DepartmentDTO> getDepartments();
 	List<EmployeeRoleDTO> getRoles();
+	List<BookingDTO> getAllBookings();
 	boolean addNewEmployee(EmployeeDTO newEmp);
 	boolean editEmployee(EmployeeDTO updateEmp);
 	boolean deleteEmployee(EmployeeDTO deleteEmp);

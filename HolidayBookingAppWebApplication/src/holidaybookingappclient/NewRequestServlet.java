@@ -18,6 +18,7 @@ import ejbholidaybookingapp.DepartmentDTO;
 import ejbholidaybookingapp.EmployeeRoleDTO;
 import ejbholidaybookingapp.EmployeeDTO;
 import ejbholidaybookingapp.RequestDTO;
+import ejbholidaybookingapp.BookingDTO;
 import ejbholidaybookingapp.HolidayBookingAppBeanRemote;
 
 /**
@@ -65,7 +66,24 @@ public class NewRequestServlet extends HttpServlet {
 		String email = session.getAttribute("email").toString();
 		EmployeeDTO thatEmployee = holidayBookingAppBean.getEmployeeByEmail(email);
 		
+		List<BookingDTO> listofEmpBooking = holidayBookingAppBean.getAllBookingsperEmp(email);
 		
+		int remaining;
+		if (!listofEmpBooking.isEmpty()) {
+			
+			BookingDTO lastBook = listofEmpBooking.get(listofEmpBooking.size() - 1);			
+			
+			if(lastBook.getBegin_date().substring(6, 10)!=beginDate.substring(0, 4)) {
+				remaining=thatEmployee.getHoliday_entitlement();
+			}else {
+				remaining=lastBook.getHoliday_remaining();
+			}
+			
+		}else {
+			remaining=thatEmployee.getHoliday_entitlement();
+		}
+		
+		//beginDate.substring(0, 4); use this as const check of that year area.
 		
 		try {
 			SimpleDateFormat converter = new SimpleDateFormat("dd/MM/yyyy");
@@ -80,9 +98,21 @@ public class NewRequestServlet extends HttpServlet {
 			long diffDays = diffTime / (1000 * 60 * 60 * 24);
 			int intDiffDays = (int) diffDays;
 			
-			RequestDTO newReq = new RequestDTO(0, converter.format(startDate).toString(), converter.format(finDate).toString(), intDiffDays, 30, 30-intDiffDays, thatEmployee.getId(), 0, 2);
-			holidayBookingAppBean.addNewRequest(newReq);
-			response.sendRedirect("EmployeesLoginServlet");
+			System.out.println(intDiffDays);
+			//change 34 to get holdayentit area.
+			remaining-=intDiffDays;
+			int pendRej=2;
+			if(remaining<0) {
+				//pendRej=0;
+				request.setAttribute("errorLoginMessage", "You exceed your holiday allowance Please pick closer date.");
+				request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
+			}else {
+				RequestDTO newReq = new RequestDTO(0, converter.format(startDate).toString(), converter.format(finDate).toString(), intDiffDays, remaining, thatEmployee.getId(), 0, pendRej);
+				holidayBookingAppBean.addNewRequest(newReq);
+				response.sendRedirect("EmployeesLoginServlet");
+			}
+			
+
 			
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block

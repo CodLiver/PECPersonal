@@ -9,6 +9,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.servlet.http.HttpSession;
 
+import model.TBooking;
 import model.TDepartment;
 import model.TEmployee;
 import model.TEmployeeRole;
@@ -65,7 +66,7 @@ public class HolidayBookingAppBean implements HolidayBookingAppBeanRemote {
 			employeeDTO.add(new EmployeeDTO(e.getId(), e.getEmployeeRole().getIdEmpRole(), e.getEmployeeRole().getEmpRoleName(),
 					e.getDepartment().getIdDep(), e.getDepartment().getDepartmentName(),
 					e.getEmail(), e.getPassword(), e.getFirstName(), e.getLastName(), e.getPhoneNumber(),
-					e.getHireDate(), e.getSalary(), e.getHomeAddress()));
+					e.getHireDate(),e.getHoliday_entitlement(), e.getSalary(), e.getHomeAddress()));
 		}
 		return employeeDTO.get(0);
 	}
@@ -80,7 +81,7 @@ public class HolidayBookingAppBean implements HolidayBookingAppBeanRemote {
 			employeeDTO.add(new EmployeeDTO(e.getId(), e.getEmployeeRole().getIdEmpRole(), e.getEmployeeRole().getEmpRoleName(),
 					e.getDepartment().getIdDep(), e.getDepartment().getDepartmentName(),
 					e.getEmail(), e.getPassword(), e.getFirstName(), e.getLastName(), e.getPhoneNumber(),
-					e.getHireDate(), e.getSalary(), e.getHomeAddress()));
+					e.getHireDate(),e.getHoliday_entitlement(), e.getSalary(), e.getHomeAddress()));
 		}
 		return employeeDTO.get(0);
 	}
@@ -113,9 +114,36 @@ public class HolidayBookingAppBean implements HolidayBookingAppBeanRemote {
 			allEmployeesDTO.add(new EmployeeDTO(e.getId(), e.getEmployeeRole().getIdEmpRole(), e.getEmployeeRole().getEmpRoleName(),
 					e.getDepartment().getIdDep(), e.getDepartment().getDepartmentName(),
 					e.getEmail(), e.getPassword(), e.getFirstName(), e.getLastName(), e.getPhoneNumber(),
-					e.getHireDate(), e.getSalary(), e.getHomeAddress()));
+					e.getHireDate(),e.getHoliday_entitlement(), e.getSalary(), e.getHomeAddress()));
 		}
 		return allEmployeesDTO;
+	}
+	
+	@Override
+	public List<BookingDTO> getAllBookings() {
+		List<TBooking> allBookings= entityManager.createNamedQuery("TBooking.findAll").getResultList();
+		List<BookingDTO> allBookingsDTO = new ArrayList<>();
+		for (TBooking b : allBookings) {
+			allBookingsDTO.add(new BookingDTO(b.getId(), b.getBegin_date(), b.getEnd_date(), b.getDuration(), b.getHoliday_remaining(),b.getId_emp().getId() , b.getRequest().getId(),
+			b.getDepartment().getIdDep()));
+
+		}
+		return allBookingsDTO;
+	}
+	
+	@Override
+	public List<BookingDTO> getAllBookingsperEmp(String email) {
+		EmployeeDTO thatEmployee = getEmployeeByEmail(email);
+		List<TBooking> allBookings= entityManager.createNamedQuery("TBooking.findAll").getResultList();
+		List<BookingDTO> allBookingsDTO = new ArrayList<>();
+		for (TBooking b : allBookings) {
+			
+			if (thatEmployee.getId() == b.getId_emp().getId())
+				allBookingsDTO.add(new BookingDTO(b.getId(), b.getBegin_date(), b.getEnd_date(), b.getDuration(), b.getHoliday_remaining(),b.getId_emp().getId() , b.getRequest().getId(),
+				b.getDepartment().getIdDep()));
+
+		}
+		return allBookingsDTO;
 	}
 	
 	@Override
@@ -125,7 +153,7 @@ public class HolidayBookingAppBean implements HolidayBookingAppBeanRemote {
 		List<RequestDTO> allRequestsDTO = new ArrayList<>();
 		for (TRequest r : allRequests) {
 			if (thatEmployee.getId() == r.getId_emp().getId())
-				allRequestsDTO.add(new RequestDTO(r.getId(), r.getBegin_date(), r.getEnd_date(), r.getDuration(), r.getHoliday_entitlement(), r.getHoliday_remaining(),r.getId_emp().getId() , r.getPeak_time(),
+				allRequestsDTO.add(new RequestDTO(r.getId(), r.getBegin_date(), r.getEnd_date(), r.getDuration(), r.getHoliday_remaining(),r.getId_emp().getId() , r.getPeak_time(),
 						r.getStatus()));
 
 		}
@@ -138,7 +166,7 @@ public class HolidayBookingAppBean implements HolidayBookingAppBeanRemote {
 			TEmployeeRole employeeRole = entityManager.find(TEmployeeRole.class, newEmp.getEmpRoleId());
 			TDepartment department = entityManager.find(TDepartment.class, newEmp.getDepId());
 			TEmployee newEmployee = new TEmployee(newEmp.getEmail(), newEmp.getPassword(), newEmp.getFirstName(),
-					newEmp.getLastName(), newEmp.getPhoneNumber(), newEmp.getHireDate(), newEmp.getSalary(),
+					newEmp.getLastName(), newEmp.getPhoneNumber(), newEmp.getHireDate(), newEmp.getHoliday_entitlement(), newEmp.getSalary(),
 					newEmp.getHomeAddress(), department, employeeRole);
 			entityManager.persist(newEmployee);
 			return true;
@@ -156,7 +184,7 @@ public class HolidayBookingAppBean implements HolidayBookingAppBeanRemote {
 			//TDepartment department = entityManager.find(TDepartment.class, newEmp.getDepId());
 			TRequest newRequest = new TRequest(
 					newReq.getBegin_date(), newReq.getEnd_date(), newReq.getDuration(),
-					newReq.getHoliday_entitlement(), newReq.getHoliday_remaining(), employee_id, newReq.getPeak_time(),
+					newReq.getHoliday_remaining(), employee_id, newReq.getPeak_time(),
 					newReq.getStatus());
 			entityManager.persist(newRequest);
 			return true;
@@ -179,6 +207,7 @@ public class HolidayBookingAppBean implements HolidayBookingAppBeanRemote {
 			employee.setLastName(updateEmp.getLastName());
 			employee.setPhoneNumber(updateEmp.getPhoneNumber());
 			employee.setHireDate(updateEmp.getHireDate());
+			employee.setHoliday_entitlement(updateEmp.getHoliday_entitlement());
 			employee.setSalary(updateEmp.getSalary());
 			employee.setHomeAddress(updateEmp.getHomeAddress());
 			employee.setDepartment(department);

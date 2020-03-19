@@ -2,6 +2,7 @@
 package holidaybookingappclient;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -73,20 +74,44 @@ public class EditEmployeeServlet extends HttpServlet {
 
 		int departmentId = Integer.parseInt(request.getParameter("selectedEmployeeDepartment"));
 		int employeeRoleId = Integer.parseInt(request.getParameter("selectedEmployeeRole"));
+		
+		
+		Date startDate;
+		try {
+			startDate = new SimpleDateFormat("dd/MM/yyyy").parse(hireDate);
+			long startTime = startDate.getTime();
+			
+			Date finDate = new SimpleDateFormat("yyyy-MM-dd").parse("2020-03-17");
+			long endTime = finDate.getTime();  
+			
+			long diffTime = endTime - startTime;
+			double diffYears = diffTime / 157680000000.0;
+			int intDiffYears = (int) diffYears;
+			
+			queryResult.setFirstName(firstName);
+			queryResult.setLastName(lastName);
+			queryResult.setEmail(email);
+			queryResult.setPhoneNumber(phoneNumber);
+			queryResult.setHomeAddress(homeAddress);
+			queryResult.setHireDate(hireDate);
+			queryResult.setHoliday_entitlement(30+intDiffYears);
+			queryResult.setSalary(salary);
+			queryResult.setPassword(password);
+			queryResult.setDepId(departmentId);
+			queryResult.setEmpRoleId(employeeRoleId);
+			
 
-		queryResult.setFirstName(firstName);
-		queryResult.setLastName(lastName);
-		queryResult.setEmail(email);
-		queryResult.setPhoneNumber(phoneNumber);
-		queryResult.setHomeAddress(homeAddress);
-		queryResult.setHireDate(hireDate);
-		queryResult.setSalary(salary);
-		queryResult.setPassword(password);
-		queryResult.setDepId(departmentId);
-		queryResult.setEmpRoleId(employeeRoleId);
 
-		holidayBookingAppBean.editEmployee(queryResult);
-		response.sendRedirect("EmployeesServlet");
+			holidayBookingAppBean.editEmployee(queryResult);
+			response.sendRedirect("EmployeesServlet");
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
+
+
 	}
 
 }

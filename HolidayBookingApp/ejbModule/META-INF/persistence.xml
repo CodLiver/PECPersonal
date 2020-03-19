@@ -6,5 +6,6 @@
 		<class>model.TDepartment</class>
 		<class>model.TEmployeeRole</class>
 		<class>model.TRequest</class>
+		<class>model.TBooking</class>
 	</persistence-unit>
 </persistence>

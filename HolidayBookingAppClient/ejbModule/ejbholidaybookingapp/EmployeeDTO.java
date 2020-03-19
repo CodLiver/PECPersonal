@@ -22,11 +22,12 @@ public class EmployeeDTO implements Serializable {
 	private String lastName;
 	private String phoneNumber;
 	private String hireDate;
+	private int holiday_entitlement;
 	private Integer salary;
 	private String homeAddress;
 
 	public EmployeeDTO(int id, int empRoleId, String empRoleName, int depId, String depName, String email, String password, String firstName,
-			String lastName, String phoneNumber, String hireDate, Integer salary, String homeAddress) {
+			String lastName, String phoneNumber, String hireDate, int holiday_entitlement, Integer salary, String homeAddress) {
 		this.Id = id;
 		this.empRoleId = empRoleId;
 		this.empRoleName = empRoleName;
@@ -38,6 +39,7 @@ public class EmployeeDTO implements Serializable {
 		this.lastName = lastName;
 		this.phoneNumber = phoneNumber;
 		this.hireDate = hireDate;
+		this.holiday_entitlement = holiday_entitlement;
 		this.salary = salary;
 		this.homeAddress = homeAddress;
 	}
@@ -129,6 +131,15 @@ public class EmployeeDTO implements Serializable {
 	public void setHireDate(String hireDate) {
 		this.hireDate = hireDate;
 	}
+	
+	public int getHoliday_entitlement() {
+		return holiday_entitlement;
+	}
+
+	public void setHoliday_entitlement(int holiday_entitlement) {
+		this.holiday_entitlement = holiday_entitlement;
+	}
+
 
 	public Integer getSalary() {
 		return salary;

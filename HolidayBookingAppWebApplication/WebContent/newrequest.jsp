@@ -24,6 +24,13 @@
 			<div>
 				<label>End Date</label> <input type="date" value="2020-03-02" min="2020-03-02" name="endDate"/>
 			</div>
+			
+				<%
+					String errMsg = (String) request.getAttribute("errorLoginMessage");
+				if (errMsg != null) {
+					out.print("<h5>" + errMsg + "</h5>");
+				}
+				%>
 
 			<button type="submit">Submit</button>
 			<a href="EmployeesLoginServlet">Back</a>

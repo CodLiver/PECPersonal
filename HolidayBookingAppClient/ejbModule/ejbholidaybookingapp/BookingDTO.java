@@ -8,7 +8,7 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
-public class RequestDTO implements Serializable {
+public class BookingDTO implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	private int Id;
@@ -17,19 +17,19 @@ public class RequestDTO implements Serializable {
 	private int duration;
 	private int holiday_remaining;
 	private int id_emp;
-	private int peak_time;
-	private int status;
+	private int id_req;
+	private int id_dep;
 
-	public RequestDTO(int id, String begin_date, String end_date, int duration, int holiday_remaining, int id_emp , int peak_time,
-			int status) {
+	public BookingDTO(int id, String begin_date, String end_date, int duration, int holiday_remaining, int id_emp , int id_req,
+			int id_dep) {
 		this.Id = id;
 		this.begin_date = begin_date;
 		this.end_date = end_date;
 		this.duration = duration;
 		this.holiday_remaining = holiday_remaining;
 		this.id_emp = id_emp ;
-		this.peak_time = peak_time;
-		this.status = status;
+		this.id_req = id_req;
+		this.id_dep = id_dep;
 	}
 
 	public int getId() {
@@ -80,20 +80,20 @@ public class RequestDTO implements Serializable {
 		this.id_emp = id_emp;
 	}
 
-	public int getPeak_time() {
+	public int getId_Req() {
 		//maybe inside changes.
-		return peak_time;
+		return id_req;
 	}
 
-	public void setPeak_time(int peak_time) {
-		this.peak_time = peak_time;
+	public void setId_Req(int id_req) {
+		this.id_req = id_req;
 	}
 
-	public int getStatus() {
-		return status;
+	public int getId_Dep() {
+		return id_dep;
 	}
 
-	public void setStatus(int status) {
-		this.status = status;
+	public void setId_Dep(int id_dep) {
+		this.id_dep = id_dep;
 	}
 }

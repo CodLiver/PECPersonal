@@ -29,7 +29,6 @@
 			<th>Begin Date</th>
 			<th>End Date</th>
 			<th>Duration</th>
-			<th>Total Holiday Given</th>
 			<th>Remaining Holiday duration</th>
 			<th>Peak time?</th>
 			<th>Approved?</th>
@@ -43,7 +42,6 @@
 			<td><%=r.getBegin_date()%></td>
 			<td><%=r.getEnd_date()%></td>
 			<td><%=r.getDuration()%></td>
-			<td><%=r.getHoliday_entitlement()%></td>
 			<td><%=r.getHoliday_remaining()%></td>
 			<td><%=r.getPeak_time()%></td>
 			<td><%=approved[r.getStatus()]%></td>

@@ -35,6 +35,7 @@
 			<th>Last_name</th>
 			<th>Email</th>
 			<th>Department</th>
+			<th>Total Holiday</th>
 			<th class="text-center">Actions</th>
 		</tr>
 		<%
@@ -47,6 +48,7 @@
 			<td><%=e.getLastName()%></td>
 			<td><%=e.getEmail()%></td>
 			<td><%=e.getDepName()%></td>
+			<td><%=e.getHoliday_entitlement()%></td>
 			<td><a href="EditEmployeeServlet?id=<%=e.getId()%>"><button
 						class="btn btn-warning">Edit</button></a></td>
 			<td></td>

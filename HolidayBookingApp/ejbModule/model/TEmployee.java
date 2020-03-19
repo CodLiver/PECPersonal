@@ -16,13 +16,14 @@ public class TEmployee implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	public TEmployee(String email, String password, String firstName, String lastName, String phoneNumber,
-			String hireDate, Integer salary, String homeAddress, TDepartment department, TEmployeeRole employeeRole) {
+			String hireDate, int holiday_entitlement, Integer salary, String homeAddress, TDepartment department, TEmployeeRole employeeRole) {
 		this.email = email;
 		this.password = password;
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.phoneNumber = phoneNumber;
 		this.hireDate = hireDate;
+		this.holiday_entitlement = holiday_entitlement;
 		this.salary = salary;
 		this.homeAddress = homeAddress;
 		this.department = department;
@@ -61,7 +62,6 @@ public class TEmployee implements Serializable {
 		this.employeeRole = employeeRole;
 	}
 
-
 	@Column(name = "EMAIL")
 	private String email;
 
@@ -79,6 +79,9 @@ public class TEmployee implements Serializable {
 
 	@Column(name = "HIRE_DATE")
 	private String hireDate;
+	
+	@Column(name = "HOL_DAYS_ENTITLEMENT")
+	private int holiday_entitlement;
 
 	@Column(name = "SALARY")
 	private Integer salary;
@@ -100,6 +103,14 @@ public class TEmployee implements Serializable {
 
 	public void setHireDate(String hireDate) {
 		this.hireDate = hireDate;
+	}
+	
+	public int getHoliday_entitlement() {
+		return holiday_entitlement;
+	}
+
+	public void setHoliday_entitlement(int holiday_entitlement) {
+		this.holiday_entitlement = holiday_entitlement;
 	}
 
 	public Integer getSalary() {

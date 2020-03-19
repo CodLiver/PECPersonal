@@ -43,10 +43,9 @@
 			<label>Home_address</label> <input class="form-control"
 				name="homeAddress" placeholder="Home_address" />
 		</div>
-		<div class="form-group">
-			<label>Hire_date</label> <input class="form-control" name="hireDate"
-				placeholder="Hire_date" />
-		</div>
+			<div>
+				<label>Hire Date</label> <input class="form-control" type="date" value="2020-03-02" max="2020-03-17" name="hireDate"/>
+			</div>
 		<div class="form-group">
 			<label>Salary</label> <input class="form-control" name="salary"
 				placeholder="Salary" />
