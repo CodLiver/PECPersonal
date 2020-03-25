@@ -9,9 +9,11 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import ejbholidaybookingapp.EmployeeDTO;
 import ejbholidaybookingapp.HolidayBookingAppBeanRemote;
+import ejbholidaybookingapp.RequestDTO;
 
 /**
  * Servlet implementation class Employees
@@ -34,8 +36,13 @@ public class EmployeesServlet extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		HttpSession session = request.getSession();
+		List<RequestDTO> getAllRequestperEmp = holidayBookingAppBean.getAllRequestperEmp(session.getAttribute("email").toString());
+		request.setAttribute("getAllRequestperEmp", getAllRequestperEmp);
+		
 		List<EmployeeDTO> allEmployees = holidayBookingAppBean.getAllEmployees();
 		request.setAttribute("allEmployees", allEmployees);
+			
 		request.getRequestDispatcher("/employee.jsp").forward(request, response);
 	}
 

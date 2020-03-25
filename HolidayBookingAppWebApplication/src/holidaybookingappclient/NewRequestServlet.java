@@ -1,8 +1,11 @@
 package holidaybookingappclient;
 
+import java.lang.Math; 
+
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -19,7 +22,9 @@ import ejbholidaybookingapp.EmployeeRoleDTO;
 import ejbholidaybookingapp.EmployeeDTO;
 import ejbholidaybookingapp.RequestDTO;
 import ejbholidaybookingapp.BookingDTO;
+
 import ejbholidaybookingapp.HolidayBookingAppBeanRemote;
+import ejbholidaybookingapp.HolidayCondCheckingBeanRemote;
 
 /**
  * Servlet implementation class NewEmployeeServlet
@@ -43,6 +48,9 @@ public class NewRequestServlet extends HttpServlet {
 
 	@EJB
 	private HolidayBookingAppBeanRemote holidayBookingAppBean;
+	
+	@EJB
+	private HolidayCondCheckingBeanRemote holidayCondCheckingBean;
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
@@ -54,7 +62,8 @@ public class NewRequestServlet extends HttpServlet {
 		
 		request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
 	}
-
+	
+	
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		//doGet(request, response);
@@ -64,58 +73,133 @@ public class NewRequestServlet extends HttpServlet {
 		//check if peak time
 		HttpSession session = request.getSession();
 		String email = session.getAttribute("email").toString();
-		EmployeeDTO thatEmployee = holidayBookingAppBean.getEmployeeByEmail(email);
 		
-		List<BookingDTO> listofEmpBooking = holidayBookingAppBean.getAllBookingsperEmp(email);
+		boolean didHaveErrorMessage=false;
 		
-		int remaining;
-		if (!listofEmpBooking.isEmpty()) {
-			
-			BookingDTO lastBook = listofEmpBooking.get(listofEmpBooking.size() - 1);			
-			
-			if(lastBook.getBegin_date().substring(6, 10)!=beginDate.substring(0, 4)) {
-				remaining=thatEmployee.getHoliday_entitlement();
-			}else {
-				remaining=lastBook.getHoliday_remaining();
-			}
-			
-		}else {
-			remaining=thatEmployee.getHoliday_entitlement();
+		
+		//in case some holidays are over a year or negative.
+		int inCheck=Integer.parseInt(endDate.substring(0, 4))-Integer.parseInt(beginDate.substring(0, 4));
+		if(inCheck>1 || inCheck<0) {
+			didHaveErrorMessage=true;
+			request.setAttribute("errorLoginMessage", "You cannot take unusual holidays.");
+			request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
 		}
+
+		EmployeeDTO thatEmployee = holidayBookingAppBean.getEmployeeByEmail(email);
+		List<BookingDTO> listofAllDepBooking = holidayBookingAppBean.getAllBookingsByDep(thatEmployee.getDepId());//getAllBookingsperEmp(email);
+		List<EmployeeDTO> allEmpListPerDep=holidayBookingAppBean.getAllEmployeesByDep(thatEmployee.getDepId());
+		
+		
+		//api this too
+		int remaining=holidayCondCheckingBean.holidayRemainingCalc(listofAllDepBooking, beginDate, endDate, thatEmployee);
 		
 		//beginDate.substring(0, 4); use this as const check of that year area.
 		
 		try {
+			
+			//do xmass here
 			SimpleDateFormat converter = new SimpleDateFormat("dd/MM/yyyy");
-			
 			Date startDate = new SimpleDateFormat("yyyy-MM-dd").parse(beginDate);
-			long startTime = startDate.getTime();
-			
 			Date finDate = new SimpleDateFormat("yyyy-MM-dd").parse(endDate);
-			long endTime = finDate.getTime();  
 			
-			long diffTime = endTime - startTime;
-			long diffDays = diffTime / (1000 * 60 * 60 * 24);
-			int intDiffDays = (int) diffDays;
+			int intDiffDays = holidayCondCheckingBean.dateDiffCalc(finDate,startDate);//(int) diffDays;
 			
+			if(intDiffDays<0) {
+				didHaveErrorMessage=true;
+				request.setAttribute("errorLoginMessage", "You cant holiday to past.");
+				request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
+			}
+			
+			int xMassDeductor=holidayCondCheckingBean.xMassCheck(beginDate,endDate);//depends on deducting duration too.
+	
+			int absoluteDuration=intDiffDays-xMassDeductor;
+			
+			
+			/*System.out.println("holiday");
 			System.out.println(intDiffDays);
-			//change 34 to get holdayentit area.
-			remaining-=intDiffDays;
-			int pendRej=2;
+			System.out.println(xMassDeductor);
+			System.out.println(absoluteDuration);*/
+			
+			remaining-=absoluteDuration;
 			if(remaining<0) {
-				//pendRej=0;
+				didHaveErrorMessage=true;
 				request.setAttribute("errorLoginMessage", "You exceed your holiday allowance Please pick closer date.");
 				request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
-			}else {
-				RequestDTO newReq = new RequestDTO(0, converter.format(startDate).toString(), converter.format(finDate).toString(), intDiffDays, remaining, thatEmployee.getId(), 0, pendRej);
+			}
+			
+			if(absoluteDuration==0) {
+				didHaveErrorMessage=true;
+				RequestDTO newReq = new RequestDTO(0, converter.format(startDate).toString(), converter.format(finDate).toString(), absoluteDuration, remaining, thatEmployee.getId(), 0, 2);
 				holidayBookingAppBean.addNewRequest(newReq);
 				response.sendRedirect("EmployeesLoginServlet");
 			}
 			
+			
+			if(thatEmployee.getEmpRoleId()<2) {//managerial branch
+				
+				int[] condBreakerList= holidayCondCheckingBean.holAllowanceForHeadDep(startDate,finDate, listofAllDepBooking, thatEmployee, allEmpListPerDep);
+				
+				String errorMessage="";
+				if(condBreakerList[1]==1)
+					errorMessage+="head master and ";
+				if (condBreakerList[3]==1)
+					errorMessage+="60%-threshold employee,";
+				
+				if(errorMessage!="") {
+					didHaveErrorMessage=true;
+					request.setAttribute("errorLoginMessage", "You are the only available "+errorMessage+" you cannot leave your people!");
+					request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
+				}
+					
+				
+			}else if(thatEmployee.getEmpRoleId()==2 || thatEmployee.getEmpRoleId()==5) {//Senior branch
+				
+				int[] condBreakerList=holidayCondCheckingBean.holAllowanceForManSen(startDate,finDate, listofAllDepBooking, thatEmployee, allEmpListPerDep);
+				
+				String errorMessage="";
+				if(condBreakerList[2]==1)
+					errorMessage+="senior staff and ";
+				if (condBreakerList[3]==1)
+					errorMessage+="60%-threshold employee,";
+				
+				if(errorMessage!="") {
+					didHaveErrorMessage=true;
+					request.setAttribute("errorLoginMessage", "You are the only available "+errorMessage+" you cannot leave your people!");
+					request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
+				}
+				
+			}else {//for regulars, check 60% rule
+				
+				int[] condBreakerList=holidayCondCheckingBean.holAllowanceForNonSpecs(startDate,finDate, listofAllDepBooking, thatEmployee, allEmpListPerDep);
+				
+				String errorMessage="";
+				if (condBreakerList[3]==1)
+					errorMessage+="60%-threshold employee,";
+				
+				if(errorMessage!="") {
+					didHaveErrorMessage=true;
+					request.setAttribute("errorLoginMessage", "You are the only available "+errorMessage+" you cannot leave your people!");
+					request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
+				}
+				
+			}
+			
+			//System.out.println(intDiffDays);
+			//change 34 to get holdayentit area.
+	
+
+			if(!didHaveErrorMessage) {
+				RequestDTO newReq = new RequestDTO(0, converter.format(startDate).toString(), converter.format(finDate).toString(), absoluteDuration, remaining, thatEmployee.getId(), 0, 2);
+				holidayBookingAppBean.addNewRequest(newReq);
+				//check if sent by head or not.
+				response.sendRedirect("EmployeesLoginServlet");
+			
+			}
+
+			
 
 			
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}  
 
