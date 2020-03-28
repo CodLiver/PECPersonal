@@ -84,8 +84,6 @@ $(function() {
 			<td><%=brokenRulesList.get(index)[2]%></td>
 			<td><%=brokenRulesList.get(index)[3]%></td>
 						
-			<td><a href="AcceptRejectRequestServlet?id=<%=r.getId()%>&decision=1"><button
-						class="btn btn-warning">Accept</button></a></td>
 			<td></td>
 			<td><a href="AcceptRejectRequestServlet?id=<%=r.getId()%>&decision=0"><button
 						class="btn btn-warning">Reject</button></a></td>
