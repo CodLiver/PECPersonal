@@ -31,6 +31,7 @@ public class EmployeesServlet extends HttpServlet {
 
     @EJB
 	private HolidayBookingAppBeanRemote holidayBookingAppBean;
+ 
     
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)

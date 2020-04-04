@@ -34,6 +34,9 @@ public class HolidayBookingAppBean implements HolidayBookingAppBeanRemote {
 
 	@Override
 	public int login(String email, String password) {
+		
+		System.out.println(email+password);
+		
 		List queryResultsHead = entityManager
 				.createQuery("SELECT e FROM TEmployee e WHERE e.email = :email and e.password = :password and (e.employeeRole < 2)")
 				.setParameter("email", email).setParameter("password", password).getResultList();

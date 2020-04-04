@@ -3,8 +3,10 @@ package ejbholidaybookingapp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -47,13 +49,13 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 		
 		if (!listofAllDepBooking.isEmpty()) {//if employee has no booking
 			List<BookingDTO> listofEmpBookingThatYear= new ArrayList<>();
-			System.out.println("Idk whats going on but not good things");
+			//-System.out.println("Idk whats going on but not good things");
 			for (BookingDTO b : listofAllDepBooking) {//.getId_emp().getId()
-				System.out.println(b.getBegin_date().substring(6, 10));
-				System.out.println(beginDate.substring(0, 4));
-				System.out.println(thatEmployee.getId());
-				System.out.println(b.getId_emp());
-				System.out.println("---");
+				//-System.out.println(b.getBegin_date().substring(6, 10));
+				//-System.out.println(beginDate.substring(0, 4));
+				//-System.out.println(thatEmployee.getId());
+				//-System.out.println(b.getId_emp());
+				//-System.out.println("---");
 				if((b.getBegin_date().substring(6, 10).equals(beginDate.substring(0, 4)))&&(thatEmployee.getId() == b.getId_emp())) {
 					listofEmpBookingThatYear.add(b);
 				}else if((b.getBegin_date().substring(6, 10).equals(beginDate.substring(6, 10)))&&(thatEmployee.getId() == b.getId_emp())) {
@@ -62,12 +64,12 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 			}
 			
 			
-			System.out.println("If there are bookings!");
-			System.out.println(listofEmpBookingThatYear.size());
-			System.out.println("Checked Emp");
-			System.out.println(thatEmployee.getId());
-			System.out.println(beginDate);
-			System.out.println("???");
+			//-System.out.println("If there are bookings!");
+			//-System.out.println(listofEmpBookingThatYear.size());
+			//-System.out.println("Checked Emp");
+			//-System.out.println(thatEmployee.getId());
+			//-System.out.println(beginDate);
+			//-System.out.println("???");
 			
 			if (listofEmpBookingThatYear.isEmpty()) {//if emp does not have that year booking. done to check irregular updates
 				remaining=thatEmployee.getHoliday_entitlement();
@@ -81,8 +83,8 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 				
 				
 				remaining=minBook.getHoliday_remaining();
-				System.out.println("bookchecked");
-				System.out.println(remaining);
+				//-System.out.println("bookchecked");
+				//-System.out.println(remaining);
 			}
 				
 		}else {
@@ -136,7 +138,7 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 			return dateDiffCalc(endDate,nxMassSDate); 
 			 
 		}else{//x--|---|--y   --,++
-			System.out.println("x||y");
+			//-System.out.println("x||y");
 			return dateDiffCalc(nxMassEDate,nxMassSDate);
 		}
 		
@@ -158,7 +160,7 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 				eYear=Integer.parseInt(endDateStr.substring(0, 4));
 				
 			}catch(Exception e) {
-				System.out.println("Accessed via Admin");
+				//-System.out.println("Accessed via Admin");
 				sYear=Integer.parseInt(beginDateStr.substring(beginDateStr.length()-4, beginDateStr.length()));
 				eYear=Integer.parseInt(endDateStr.substring(endDateStr.length()-4, endDateStr.length()));
 			}
@@ -171,7 +173,7 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 				beginDate = new SimpleDateFormat("yyyy-MM-dd").parse(beginDateStr);
 				endDate = new SimpleDateFormat("yyyy-MM-dd").parse(endDateStr);
 			}catch(Exception e) {
-				System.out.println("Accessed via Admin");
+				//-System.out.println("Accessed via Admin");
 				beginDate = new SimpleDateFormat("dd/MM/yyyy").parse(beginDateStr);
 				endDate = new SimpleDateFormat("dd/MM/yyyy").parse(endDateStr);
 			}
@@ -206,7 +208,7 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 			e.printStackTrace();
 		}  
 		
-		System.out.println(holDeductCalcing);
+		//-System.out.println(holDeductCalcing);
 		return holDeductCalcing;	
 		
 	}
@@ -217,9 +219,13 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 		
 		int totDepSize=allEmpListPerDep.size();
 		double minDepSizeDouble=totDepSize*0.6;//check for 40%peak time rule too.
+		if (!isPeak)
+			minDepSizeDouble=totDepSize*0.4;
 		int minDepSize=(int) Math.ceil(minDepSizeDouble);
 		int maxCanClash=totDepSize-minDepSize;
 
+		System.out.println("allowed area: "+String.valueOf(allEmpListPerDep.size())+"vs"+String.valueOf(maxCanClash));
+		System.out.println("allowed area: "+isPeak);
 		return maxCanClash;
 	}
 	
@@ -241,8 +247,64 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 				Date bFinDate = new SimpleDateFormat("dd/MM/yyyy").parse(b.getEnd_date());
 				
 				int potentialClashDay=holidayDeductCalc(startDate,finDate,bStartDate,bFinDate);
-				if(potentialClashDay!=0 && b.getId_emp()!=thatEmployee.getId()) //{//get booking that not yours
+				
+				
+				if(potentialClashDay!=0 && b.getId_emp()!=thatEmployee.getId()) { //{//get booking that not yours
+					
+					
+					//del this deprecated
+					Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Europe/London"));
+					cal.setTime(startDate);
+					String syear=String.valueOf(cal.get(Calendar.YEAR));
+					cal.setTime(finDate);
+					String eyear=String.valueOf(cal.get(Calendar.YEAR));
+					cal.setTime(bFinDate);
+					String ebyear=String.valueOf(cal.get(Calendar.YEAR));
+					cal.setTime(bStartDate);
+					String sbyear=String.valueOf(cal.get(Calendar.YEAR));
+					
+					Date xmassSDate = new SimpleDateFormat("dd/MM/yyyy").parse("23/12/"+syear);
+					Date xmassEDate = new SimpleDateFormat("dd/MM/yyyy").parse("03/01/"+ebyear);
+					
+					if (!syear.equals(ebyear)) {
+						if (finDate.after(xmassSDate)&&finDate.before(xmassEDate)&&bStartDate.after(xmassSDate)&&bStartDate.before(xmassEDate)) {
+							continue;
+						}
+					}//del this deprecated
+					
 					clashingBookingList.add(b);
+					
+					/*
+					 * 
+					 * dec         Jan
+ 					 *  ---{---|   }
+ 					 *     {---|---}---
+ 					 *     
+ 					 *     *********
+ 					 *  ---{   |   }
+ 					 *     {   |   }---
+ 					 *  if start1!=end2
+ 					 *  prob
+ 					 *  e1 after xmassstart&b4end   & s2-after-xmasSstart & before xmassend
+ 					 *  
+					 * 
+					 * Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Europe/London"));
+					cal.setTime(startDate);
+					String syear=String.valueOf(cal.get(Calendar.YEAR));
+					
+
+					Date augStart = new SimpleDateFormat("dd/MM/yyyy").parse("23/12/"+syear);
+					Date augEnd = new SimpleDateFormat("dd/MM/yyyy").parse("03/01/"+syear);
+						
+					int checkIfClashInxMass= holidayDeductCalc(startDate,finDate,augStart,augEnd);//check if the date touches aug.
+
+						
+					if (checkIfAug>0)
+						return true;
+					
+					if(false)*/
+						
+				}
 				
 			}
 			
@@ -263,7 +325,7 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 		try {
 			for (int clashInd=0;clashInd<clashingBookingList.size();clashInd++) {//BookingDTO clashed : clashingBookingList) {
 				int interRoleClashNo=0;
-				System.out.println("For for's for.");
+				//-System.out.println("For for's for.");
 				
 				BookingDTO curClash = clashingBookingList.get(clashInd);
 				
@@ -275,8 +337,8 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 				List<Integer> clashUniques=new ArrayList<>();
 				
 				for(int clashIndx=0;clashIndx<clashingBookingList.size();clashIndx++) {						
-						System.out.println("For for's for for.");
-						System.out.println("clashunix size "+String.valueOf(clashUniques.size()));
+					//-System.out.println("For for's for for.");
+					System.out.println("clashunix size "+String.valueOf(clashUniques.size()));
 						
 						BookingDTO curClashx = clashingBookingList.get(clashIndx);
 						
@@ -289,27 +351,29 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 						
 						System.out.println("wtf dates: "+cb1s.toString()+""+cb1e.toString()+""+cb2s.toString()+""+cb2e.toString());
 						
-						int clashingDaysNo=holidayDeductCalc(cb1s,cb1e,cb2s,cb2e);
-						System.out.println(clashingDaysNo);
+						int clashingDaysNo=holidayDeductCalc(cb1s,cb1e,cb2s,cb2e);//clash checking area
+						//-System.out.println(clashingDaysNo);
 						if(clashingDaysNo!=0) {//maybe add unix here too.
 							clashUniques.add(curClashx.getId_emp());
-							System.out.println("clashday!=0");
+							
+							
+							//-System.out.println("clashday!=0");
 							
 							
 							int clashEmpRolex = holidayBookingAppBean.getEmployeeById(curClashx.getId_emp()).getEmpRoleId();
 							
-							System.out.println("land o rolex: "+String.valueOf(clashEmpRole)+"-x"+String.valueOf(clashEmpRolex));
+							//-System.out.println("land o rolex: "+String.valueOf(clashEmpRole)+"-x"+String.valueOf(clashEmpRolex));
 							if (reqCheck_condition==1) {
-								System.out.println("entered reqcheck 1");
+								//-System.out.println("entered reqcheck 1");
 								if(clashEmpRolex<2 && clashEmpRole<2)
 									interRoleClashNo++;
-								System.out.println("1 con: "+String.valueOf(interRoleClashNo));
+								//-System.out.println("1 con: "+String.valueOf(interRoleClashNo));
 								
 							}else if(reqCheck_condition==2) {
-								System.out.println("entered reqcheck 2");
+								//-System.out.println("entered reqcheck 2");
 								if(thatEmployee.getEmpRoleId()==clashEmpRolex && clashEmpRole==thatEmployee.getEmpRoleId())//mindful using with other non important roles.
 									interRoleClashNo++;
-								System.out.println("2 con: "+String.valueOf(interRoleClashNo));
+								//-System.out.println("2 con: "+String.valueOf(interRoleClashNo));
 							}
 							
 	
@@ -319,30 +383,30 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 				}
 				
 				
-				System.out.println("Roles: "+String.valueOf(clashEmpRole)+" v "+String.valueOf(thatEmployee.getEmpRoleId()));
+				//-System.out.println("Roles: "+String.valueOf(clashEmpRole)+" v "+String.valueOf(thatEmployee.getEmpRoleId()));
 				if (clashEmpRole<2&&thatEmployee.getEmpRoleId()<2) {
 					interRoleClashNo++;
 				}else if(clashEmpRole==thatEmployee.getEmpRoleId()&&reqCheck_condition==2) {
 					interRoleClashNo++;
 					interRoleClashNo++;
 				}
-					
-				
 				
 				if (interRoleClashNo>=roleConflictCount&&reqCheck_condition==2) {
-					System.out.println("cond 2 breaker added");
-					System.out.println("roleclashno"+String.valueOf(interRoleClashNo)+" roleConf: "+String.valueOf(roleConflictCount));
+					//-System.out.println("cond 2 breaker added");
+					//-System.out.println("roleclashno"+String.valueOf(interRoleClashNo)+" roleConf: "+String.valueOf(roleConflictCount));
 					condBreakerList[2]=1;
 					//request.setAttribute("errorLoginMessage", "You are the only available Experienced staff, you cannot leave your people!");
 					//request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
 				}else if(interRoleClashNo>=1&&reqCheck_condition==1) {
-					System.out.println("cond 1 breaker added");
-					System.out.println("roleclashno"+String.valueOf(interRoleClashNo)+" roleConf: "+String.valueOf(roleConflictCount));
+					//-System.out.println("cond 1 breaker added");
+					//-System.out.println("roleclashno"+String.valueOf(interRoleClashNo)+" roleConf: "+String.valueOf(roleConflictCount));
 					condBreakerList[1]=1;//roleConflictCount=2
 					//request.setAttribute("errorLoginMessage", "You are the only available head master, you cannot leave your people!");
 					//request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
 				}
 				
+				
+				System.out.println("cond3 unix+1 >= maxcl: "+String.valueOf(clashUniques.size()+1)+">="+String.valueOf(maxCanClash));
 				if(clashUniques.size()+1>=maxCanClash) {//basis of 60% constraint
 					System.out.println("cond 3 breaker added");
 					condBreakerList[3]=1;
@@ -358,12 +422,205 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 		return condBreakerList;
 	}
 	
+	private boolean checkIfinAug(Date startDate,Date finDate) {
+		
+		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Europe/London"));
+		cal.setTime(startDate);
+		String syear=String.valueOf(cal.get(Calendar.YEAR));
+		
+
+		
+		try {
+			Date augStart = new SimpleDateFormat("dd/MM/yyyy").parse("01/08/"+syear);
+			Date augEnd = new SimpleDateFormat("dd/MM/yyyy").parse("31/08/"+syear);
+			
+			int checkIfAug= holidayDeductCalc(startDate,finDate,augStart,augEnd);//check if the date touches aug.
+			
+			
+			System.out.println("check if aug");
+			System.out.println("Start Dates Checked: "+startDate.toString()+"-"+finDate.toString());
+			System.out.println(checkIfAug);
+			
+			if (checkIfAug>0)
+				return true;
+			
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		
+	
+		return false;
+	}
+	
+	@Override
+	public int[] calcAugBreak(int[] condBreakerList,Date startDate, Date finDate, List<EmployeeDTO> allEmpListPerDep, List<BookingDTO> clashingBookingList,int emp_id) {
+		
+		
+		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Europe/London"));
+		cal.setTime(startDate);
+		String syear=String.valueOf(cal.get(Calendar.YEAR));
+		
+
+		
+		try {
+			Date augStart = new SimpleDateFormat("dd/MM/yyyy").parse("01/08/"+syear);
+			Date augEnd = new SimpleDateFormat("dd/MM/yyyy").parse("31/08/"+syear);
+			
+			int checkIfAug= holidayDeductCalc(startDate,finDate,augStart,augEnd);//check if the date touches aug.
+			
+			
+			System.out.println("check if aug");
+			System.out.println("Start Dates Checked: "+startDate.toString()+"-"+finDate.toString());
+			System.out.println(checkIfAug);
+			
+			if (checkIfAug>0) {
+				
+				
+				Object[] latestStart = {startDate,0};
+				Object[] earliestFinish = {finDate,0};
+				boolean isPartial=false;
+				
+				if(finDate.after(augEnd)) {
+					//finDate=augEnd
+					isPartial=true;
+					earliestFinish[0]=augEnd;
+				}
+				
+				if(startDate.before(augStart)) {
+					//startDate=augStart
+					latestStart[0]=augStart;
+				}
+			
+				List<Date> getDates = new ArrayList<>();
+				
+				//String.valueOf(cal.get(Calendar.DAY_OF_MONTH))+"/"+String.valueOf(cal.get(Calendar.MONTH))+"/"+String.valueOf(cal.get(Calendar.YEAR))
+				getDates.add(startDate);
+				//cal.setTime(finDate);
+				getDates.add(finDate);
+				
+				int counter=1;
+				for (BookingDTO b: clashingBookingList) {
+					
+					if (b.getId_emp()!=emp_id) {//not sure if good idea.
+
+					Date in_beginDate = new SimpleDateFormat("dd/MM/yyyy").parse(b.getBegin_date());
+					Date in_endDate = new SimpleDateFormat("dd/MM/yyyy").parse(b.getEnd_date());
+					
+					System.out.println("b Dates Checked: "+in_beginDate.toString()+"-"+in_endDate.toString());
+					
+					if (in_beginDate.after((Date) latestStart[0])) {
+						System.out.println("this b date's start is after than latest start: "+String.valueOf(counter)+"-"+in_beginDate);
+						latestStart[0]=in_beginDate;
+						latestStart[1]=counter;
+					}
+					
+					if(in_endDate.before((Date) earliestFinish[0])) {
+						System.out.println("this b date's end is before than earliest finish: "+String.valueOf(counter)+"-"+in_endDate);
+						earliestFinish[0]=in_endDate;
+						earliestFinish[1]=counter;
+					}
+					counter++;
+				
+					getDates.add(in_beginDate);
+					getDates.add(in_endDate);
+					}
+				}//for loop
+			
+				Date checkFin = (Date) earliestFinish[0];
+				Date checkStr = (Date) latestStart[0];
+				
+				System.out.println("range to compare: "+checkStr.toString()+"--"+checkFin.toString());
+				//((Date) earliestFinish[0]).before((Date) latestStart[0])
+				while (checkFin.before(checkStr)) {
+					System.out.println("Oops problem in the system.. fixing now: "+String.valueOf(getDates.size()));
+					
+					int in2remove=getDates.indexOf(earliestFinish[1]);
+					System.out.println("Removing: "+getDates.get(in2remove).toString());
+					getDates.remove(in2remove);
+					System.out.println("Removing: "+getDates.get(in2remove).toString());
+					getDates.remove(in2remove);
+					earliestFinish[0] = finDate;
+					earliestFinish[1] = 0;
+					
+					//idk why
+					System.out.println(isPartial);
+					if(isPartial)
+						earliestFinish[0] = augEnd;
+					
+					
+					counter=0;
+					for (int xx=0;xx<getDates.size();xx+=2) {
+						if (getDates.get(xx).after((Date) latestStart[0])) {
+							latestStart[0]=getDates.get(xx);
+							latestStart[1]=counter;
+							}
+						
+						if(getDates.get(xx+1).before((Date) earliestFinish[0])) {
+							earliestFinish[0]=getDates.get(xx+1);
+							earliestFinish[1]=counter;
+							}
+						counter++;
+						
+						}
+					
+					checkFin = (Date) earliestFinish[0];
+					checkStr = (Date) latestStart[0];
+				}//endwhile
+				
+				if(checkFin.compareTo(checkStr)==0) {
+					cal.setTime(checkFin);
+					cal.add(Calendar.DATE, 1);
+					checkFin = cal.getTime();
+				}
+					
+				//latestStart[1] = 0;
+				//earliestFinish[1] = 0;
+				int augClash=1;
+				for (BookingDTO b: clashingBookingList) {
+					//notforget self.
+					if (b.getId_emp()!=emp_id) {//not sure if good idea v2
+					Date in_beginDate = new SimpleDateFormat("dd/MM/yyyy").parse(b.getBegin_date());
+					Date in_endDate = new SimpleDateFormat("dd/MM/yyyy").parse(b.getEnd_date());
+					
+					checkFin = (Date) earliestFinish[0];
+					checkStr = (Date) latestStart[0];
+					if(holidayDeductCalc(in_beginDate,in_endDate,checkStr,checkFin)>0)
+						System.out.println("broken 40%s: "+in_beginDate.toString()+"-"+in_endDate.toString()+" x "+checkStr.toString()+"-"+checkFin.toString());
+						augClash++;
+					}
+					
+				}
+				
+				int maxAugClash=getMaxCanClashEmp(allEmpListPerDep,false);
+				
+				System.out.println("maxAugClash");
+				System.out.println(maxAugClash);
+				System.out.println(augClash);
+				System.out.println(augClash>maxAugClash);
+				if(augClash>maxAugClash)//+1
+					condBreakerList[3]=1;
+				
+				return condBreakerList;
+				//40 - 4clash, 60- 3clash tot 8.
+				
+			}//if for inside aug
+			
+		}catch(Exception e) {
+			System.out.print("Fucked up");
+			e.printStackTrace();
+		}
+			
+		return condBreakerList;
+	}
+	
 	//condbreaker array for headDep
 	@Override
 	public int[] holAllowanceForHeadDep(Date startDate,Date finDate, List<BookingDTO> listofAllDepBooking, EmployeeDTO thatEmployee,List<EmployeeDTO> allEmpListPerDep) {
 		
 		
-		System.out.println("Welcome to the Land of C's!");
+		//-System.out.println("Welcome to the Land of C's!");
 		int[] condBreakerList={0,0,0,0};
 		
 		List<EmployeeDTO> headDepList=new ArrayList<>();
@@ -374,17 +631,91 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 		
 		int headDepCount=headDepList.size();
 		
-		System.out.println("headdepcount: "+String.valueOf(headDepCount));
+		//-System.out.println("headdepcount: "+String.valueOf(headDepCount));
 		
 		int maxCanClash=getMaxCanClashEmp(allEmpListPerDep,true);
 		
-		System.out.println("Max can clash C: "+String.valueOf(maxCanClash));
+		//-System.out.println("Max can clash C: "+String.valueOf(maxCanClash));
 		
 		List<BookingDTO> clashingBookingList = getClashingBookingList(startDate, finDate, thatEmployee, listofAllDepBooking);
 		
+		//startDate.getYear();
+		
+		/*Date date; // your date
+		// Choose time zone in which you want to interpret your Date
+		cal.setTime(date);
+		int year = cal.get(Calendar.YEAR);
+		int month = cal.get(Calendar.MONTH);
+		int day = cal.get(Calendar.DAY_OF_MONTH);*/
+		
+		
+		
+		/*
+		 * Func C:
+		 * get book list +
+		 * create func with (sdate,edate,clashbooklist) +
+		 * get latest start date, earliest end date incl main request +
+		 * save both req for that +
+		 * if late start is later than early finish
+		 * ---e   s----
+		 *   ---v--e
+		 *       ----
+		 *        ------      
+		 * until its not the case, remove that breaker +
+		 * put again.  
+		 * 
+		 *   
+		 * else:
+		 * -------
+		 *   s----
+		 *    -ve
+		 * if date not lies in august, apply std procedure +
+		 * if date lies in august, calc all and say it clashes 40% or not
+		 * if date partial lies in aug, get 1 aug date or 31 aug date
+		 * and apply std procedure
+		 * 
+		 * */
+		
+		/*
+		 * Func F:
+		 * recommendation for breaking 
+		 * get random date, get available hol time
+		 * add it to random s date. 
+		 * check until no const. break
+		 * ----
+		 * change cond not breaker list for Func B:
+		 * get the year, calc all booking that year (fake calc the ones 20/21)
+		 * put them on new first list**** wait the other?
+		 * change ispeak time for cumul peak time
+		 * hard code peak time dates, apply datediffcalc
+		 * add on request add peak time,
+		 * may add another col to books, that cumul peak time update.
+		 * give some # which wont work i guess. good night.
+		 * 
+		 * 
+		 */
 		System.out.println("size of clash booklist: "+String.valueOf(clashingBookingList.size()));
 		
-		return calculateHolClashesAndConflicts(condBreakerList, clashingBookingList, thatEmployee, maxCanClash, headDepCount-1, 1);
+		
+		boolean alreadyChecked=false;
+		boolean isAug = checkIfinAug(startDate,finDate);
+
+			
+		if (isAug)
+			condBreakerList=calcAugBreak(condBreakerList,startDate,finDate,allEmpListPerDep,clashingBookingList,thatEmployee.getId());
+
+		if (condBreakerList[3]==0&&isAug)
+			alreadyChecked=true;
+		
+		System.out.println("checked dates for const: "+startDate.toString()+"-"+finDate.toString());
+		condBreakerList = calculateHolClashesAndConflicts(condBreakerList, clashingBookingList, thatEmployee, maxCanClash, headDepCount-1, 1);
+		
+			
+		if (condBreakerList[3]==1&&alreadyChecked)
+			condBreakerList[3]=0;
+			
+		
+		return condBreakerList;
 
 	}
 
@@ -407,6 +738,16 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 		
 		int maxCanClash=getMaxCanClashEmp(allEmpListPerDep,true);
 		
+		//-System.out.println("manser, max can clash");
+		//-System.out.println(maxCanClash);
+		//-System.out.println(manSerList.size());
+		
+		if(manSerList.size()==1) {
+			condBreakerList[2]=1;
+			System.out.println("cond2 broken!manser");
+		}
+		
+		
 		/* could be reopened to shortcut stuff.
 		 * if (manSerCount==1) {// 1,2,3,4 cond checker returns maybe
 			request.setAttribute("errorLoginMessage", "You are the only available Experienced staff, you cannot leave your people!");
@@ -416,7 +757,23 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 		
 		List<BookingDTO> clashingBookingList = getClashingBookingList(startDate, finDate, thatEmployee, listofAllDepBooking);
 		
-		return calculateHolClashesAndConflicts(condBreakerList, clashingBookingList, thatEmployee, maxCanClash, manSerCount, 2);
+		boolean alreadyChecked=false;
+		boolean isAug = checkIfinAug(startDate,finDate);
+
+		/*
+		if (isAug)
+			condBreakerList=calcAugBreak(condBreakerList,startDate,finDate,allEmpListPerDep,clashingBookingList,thatEmployee.getId());
+	
+		if (condBreakerList[3]==0&&isAug)
+			alreadyChecked=true;*/
+		System.out.println("checked dates for const: "+startDate.toString()+"-"+finDate.toString());
+		condBreakerList = calculateHolClashesAndConflicts(condBreakerList, clashingBookingList, thatEmployee, maxCanClash, manSerCount, 2);
+		
+		
+		if (condBreakerList[3]==1&&alreadyChecked)
+			condBreakerList[3]=0;
+			
+		return condBreakerList;
 		
 	}
 	
@@ -436,7 +793,24 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 		
 		List<BookingDTO> clashingBookingList = getClashingBookingList(startDate, finDate, thatEmployee, listofAllDepBooking);
 		
-		return calculateHolClashesAndConflicts(condBreakerList, clashingBookingList, thatEmployee, maxCanClash, -1, 3);
+		boolean alreadyChecked=false;
+		boolean isAug = checkIfinAug(startDate,finDate);
+
+		/*
+		if (isAug)
+			condBreakerList=calcAugBreak(condBreakerList,startDate,finDate,allEmpListPerDep,clashingBookingList,thatEmployee.getId());
+		
+			
+		if (condBreakerList[3]==0&&isAug)
+			alreadyChecked=true;*/
+		System.out.println("checked dates for const: "+startDate.toString()+"-"+finDate.toString());
+		condBreakerList = calculateHolClashesAndConflicts(condBreakerList, clashingBookingList, thatEmployee, maxCanClash, -1, 3);
+
+			
+		if (condBreakerList[3]==1&&alreadyChecked)
+			condBreakerList[3]=0;
+		
+		return condBreakerList;
 		
 	}
 	
@@ -456,8 +830,8 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 			
 			for (RequestDTO r : allRequestsByDep) {
 				
-				System.out.println("------------ New Request ----------");
-				System.out.println(r.getId());
+				//-System.out.println("------------ New Request ----------");
+				//-System.out.println(r.getId());
 				
 				if(r.getStatus()!=2)
 					continue;
@@ -469,18 +843,18 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 				
 				int holAbsoluteDuration=r.getDuration();
 				
-				System.out.println("Duration got");
+				//-System.out.println("Duration got");
 				
 				if(holAbsoluteDuration==0) {
 					System.out.println("0 dur area");
 					ruleNotBreakingReqsList.add(r);
 					continue;
 				}
-				System.out.println("pre-remaining area");
+				//-System.out.println("pre-remaining area");
 				
 				int remaining = holidayRemainingCalc(listofAllDepBooking, r.getBegin_date(), r.getEnd_date(), thatEmployee);
 				
-				System.out.println("remaining area");
+				//-System.out.println("remaining area");
 				/*
 				 * 
 				 * xmass and other stuff have already been calculated in getDuration();
@@ -506,8 +880,8 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 				
 				remaining-=absoluteDuration;
 				
-				System.out.println("remaining recalced=");
-				System.out.println(remaining);
+				//-System.out.println("remaining recalced=");
+				//-System.out.println(remaining);
 
 				if(remaining<0) {
 					didHaveErrorMessage=true;
@@ -516,7 +890,7 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 				
 				if(thatEmployee.getEmpRoleId()<2) {
 					
-					System.out.println("land of 2's");
+					//-System.out.println("land of 2's");
 					
 					int[] temp_condBreakerList = holAllowanceForHeadDep(startDate,finDate, listofAllDepBooking, thatEmployee, allEmpListPerDep);
 					
@@ -534,7 +908,7 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 					
 				}else if(thatEmployee.getEmpRoleId()==2 || thatEmployee.getEmpRoleId()==5) {
 					
-					System.out.println("land of 5's");
+					//-System.out.println("land of 5's");
 					int[] temp_condBreakerList=holAllowanceForManSen(startDate,finDate, listofAllDepBooking, thatEmployee, allEmpListPerDep);
 					
 					if(temp_condBreakerList[2]==1) {
@@ -550,10 +924,10 @@ public class HolidayCondCheckingBean implements HolidayCondCheckingBeanRemote {
 			
 				
 				if(!didHaveErrorMessage) {
-					System.out.println("no errs so no rule breakk");
+					//-System.out.println("no errs so no rule breakk");
 					ruleNotBreakingReqsList.add(r);
 				}else {
-					System.out.println("rule breakk");
+					//-System.out.println("rule breakk");
 					ruleBreakingReqsList.add(r);
 					brokenRulesList.add(condBreakerList);
 				}

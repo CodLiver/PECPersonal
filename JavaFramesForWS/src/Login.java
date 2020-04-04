@@ -59,6 +59,10 @@ public class Login extends JFrame {
 		contentPane.add(tf_password);
 		tf_password.setColumns(10);
 		
+		JLabel label_error = new JLabel("");
+		label_error.setBounds(69, 185, 200, 16);
+		contentPane.add(label_error);		
+		
 		JButton button_login = new JButton("Login");
 		button_login.setBounds(292, 181, 95, 25);
 		button_login.addActionListener(new ActionListener() {
@@ -66,17 +70,19 @@ public class Login extends JFrame {
 				
 			try {
 				StringBuilder result = new StringBuilder();
-			      URL url = new URL("http://localhost:8180/HolidayAppRest/rest/con/login");
+			      URL url = new URL("http://localhost:8180/HolidayBookingAppWebApplication/rest/con/login");//   HolidayAppRest
 			      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			      conn.setRequestMethod("POST");
 			      conn.setRequestProperty("Content-Type", "application/json; utf-8");
 			      conn.setRequestProperty("Accept", "application/json");
 			      conn.setDoOutput(true);
 			      String jsonInputString = "{email: "+tf_username.getText()+", password: "+tf_password.getText()+"}";
+			      
 			      try(OutputStream os = conn.getOutputStream()) {
 			    	    byte[] input = jsonInputString.getBytes("utf-8");
 			    	    os.write(input, 0, input.length);           
 			    	}
+			      
 			      try(BufferedReader br = new BufferedReader(
 			    		  new InputStreamReader(conn.getInputStream(), "utf-8"))) {
 			    		    StringBuilder response = new StringBuilder();
@@ -84,7 +90,25 @@ public class Login extends JFrame {
 			    		    while ((responseLine = br.readLine()) != null) {
 			    		        response.append(responseLine.trim());
 			    		    }
-			    		    System.out.println("res: "+response.toString());
+			    		    
+			    		    Integer resultRes = Integer.valueOf(response.toString());
+			    		    System.out.println("res: "+resultRes);
+			    		    
+			    		    if (resultRes==2) {
+			    		    	
+			    				EmployeePage frame = new EmployeePage(tf_username.getText());
+			    				frame.setVisible(true);
+
+			    				setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			    				dispose();
+			    				
+			    				
+			    		    }else {
+			    		    	
+			    		    	label_error.setText("Invalid password or not employee login info.");
+			    		    }
+			    		    
+			    		    
 			    }
 			   
 				}catch(Exception e) {

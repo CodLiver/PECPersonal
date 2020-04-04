@@ -6,8 +6,11 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
+import java.util.TimeZone;
 
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
@@ -92,6 +95,7 @@ public class NewRequestServlet extends HttpServlet {
 		
 		//api this too
 		int remaining=holidayCondCheckingBean.holidayRemainingCalc(listofAllDepBooking, beginDate, endDate, thatEmployee);
+		int holRem=remaining;
 		
 		//beginDate.substring(0, 4); use this as const check of that year area.
 		
@@ -100,17 +104,26 @@ public class NewRequestServlet extends HttpServlet {
 			//do xmass here
 			SimpleDateFormat converter = new SimpleDateFormat("dd/MM/yyyy");
 			Date startDate = new SimpleDateFormat("yyyy-MM-dd").parse(beginDate);
-			Date finDate = new SimpleDateFormat("yyyy-MM-dd").parse(endDate);
+			Date finDate = new SimpleDateFormat("yyyy-MM-dd").parse(endDate);			
 			
 			int intDiffDays = holidayCondCheckingBean.dateDiffCalc(finDate,startDate);//(int) diffDays;
 			
 			if(intDiffDays<0) {
 				didHaveErrorMessage=true;
 				request.setAttribute("errorLoginMessage", "You cant holiday to past.");
+				request.setAttribute("errorLoginMessage2", "Try "+endDate+" to "+beginDate+" if allowed.");
 				request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
 			}
 			
 			int xMassDeductor=holidayCondCheckingBean.xMassCheck(beginDate,endDate);//depends on deducting duration too.
+			
+			System.out.println("reee xMassDeductor");
+			System.out.println(xMassDeductor);
+			if(xMassDeductor<11&&xMassDeductor>0) {
+				didHaveErrorMessage=true;
+				request.setAttribute("errorLoginMessage", "Please do not choose dates between 23December-03Jan. Ex: (start)20Dec-5Jan(end) request is OK, 25Dec-X or x-1Jan are Not OK. ");
+				request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
+			}
 	
 			int absoluteDuration=intDiffDays-xMassDeductor;
 			
@@ -124,6 +137,7 @@ public class NewRequestServlet extends HttpServlet {
 			if(remaining<0) {
 				didHaveErrorMessage=true;
 				request.setAttribute("errorLoginMessage", "You exceed your holiday allowance Please pick closer date.");
+				request.setAttribute("errorLoginMessage", "Your holiday allowings are "+String.valueOf(holRem)+" days.");
 				request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
 			}
 			
@@ -148,6 +162,45 @@ public class NewRequestServlet extends HttpServlet {
 				if(errorMessage!="") {
 					didHaveErrorMessage=true;
 					request.setAttribute("errorLoginMessage", "You are the only available "+errorMessage+" you cannot leave your people!");
+					
+					boolean didSecondErr=true;
+					//absoluteDuration
+					String aNewDate="Nan";
+					String aNewFinDate = "Nan";
+					int limit=0;
+					while(didSecondErr && limit<5) {
+						limit++;
+						Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Europe/London"));
+						cal.setTime(startDate);
+						String startyear=String.valueOf(cal.get(Calendar.YEAR));
+						String startMonth = "0"+String.valueOf(new Random().nextInt(9)+1);
+						String startDay = String.valueOf(new Random().nextInt(19)+10);
+						aNewDate = startyear+"-"+startMonth+"-"+startDay;
+						Date startNewDate = new SimpleDateFormat("yyyy-MM-dd").parse(aNewDate);
+						
+						cal.setTime(startNewDate);
+						cal.add(Calendar.DATE, absoluteDuration);
+						Date finNewDate = cal.getTime();
+						String finyear=String.valueOf(cal.get(Calendar.YEAR));
+						String finmonth=String.valueOf(cal.get(Calendar.MONTH)+1);
+						String finday=String.valueOf(cal.get(Calendar.DAY_OF_MONTH));
+						aNewFinDate = finyear+"-"+finmonth+"-"+finday;
+						
+						int[] condBreakerList2= holidayCondCheckingBean.holAllowanceForHeadDep(startNewDate,finNewDate, listofAllDepBooking, thatEmployee, allEmpListPerDep);
+						
+						boolean didThirdErr=false;
+						for(int i : condBreakerList2) {
+							if(i==1) 
+								didThirdErr=true;
+						}
+						didSecondErr=didThirdErr;
+					}
+					if (limit<5) {
+						request.setAttribute("errorLoginMessage2", "You can choose this holiday: "+aNewDate+" to "+aNewFinDate);
+					}else {
+						request.setAttribute("errorLoginMessage2", "and you might probably be the only person, so you cannot take holiday ever.");
+					}
+					
 					request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
 				}
 					
@@ -155,6 +208,10 @@ public class NewRequestServlet extends HttpServlet {
 			}else if(thatEmployee.getEmpRoleId()==2 || thatEmployee.getEmpRoleId()==5) {//Senior branch
 				
 				int[] condBreakerList=holidayCondCheckingBean.holAllowanceForManSen(startDate,finDate, listofAllDepBooking, thatEmployee, allEmpListPerDep);
+				
+				
+				System.out.println("manser-break");
+				System.out.println(condBreakerList[2]);
 				
 				String errorMessage="";
 				if(condBreakerList[2]==1)
@@ -165,6 +222,46 @@ public class NewRequestServlet extends HttpServlet {
 				if(errorMessage!="") {
 					didHaveErrorMessage=true;
 					request.setAttribute("errorLoginMessage", "You are the only available "+errorMessage+" you cannot leave your people!");
+					
+					
+					boolean didSecondErr=true;
+					//absoluteDuration
+					String aNewDate="Nan";
+					String aNewFinDate = "Nan";
+					int limit=0;
+					while(didSecondErr && limit<5) {
+						limit++;
+						Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Europe/London"));
+						cal.setTime(startDate);
+						String startyear=String.valueOf(cal.get(Calendar.YEAR));
+						String startMonth = "0"+String.valueOf(new Random().nextInt(9)+1);
+						String startDay = String.valueOf(new Random().nextInt(19)+10);
+						aNewDate = startyear+"-"+startMonth+"-"+startDay;
+						Date startNewDate = new SimpleDateFormat("yyyy-MM-dd").parse(aNewDate);
+						
+						cal.setTime(startNewDate);
+						cal.add(Calendar.DATE, absoluteDuration);
+						Date finNewDate = cal.getTime();
+						String finyear=String.valueOf(cal.get(Calendar.YEAR));
+						String finmonth=String.valueOf(cal.get(Calendar.MONTH)+1);
+						String finday=String.valueOf(cal.get(Calendar.DAY_OF_MONTH));
+						aNewFinDate = finyear+"-"+finmonth+"-"+finday;
+						
+						int[] condBreakerList2= holidayCondCheckingBean.holAllowanceForManSen(startNewDate,finNewDate, listofAllDepBooking, thatEmployee, allEmpListPerDep);
+						
+						boolean didThirdErr=false;
+						for(int i : condBreakerList2) {
+							if(i==1) 
+								didThirdErr=true;
+						}
+						didSecondErr=didThirdErr;
+					}
+					if (limit<5){
+						request.setAttribute("errorLoginMessage2", "You can choose this holiday: "+aNewDate+" to "+aNewFinDate);
+					}else {
+						request.setAttribute("errorLoginMessage2", "and you might probably be the only person, so you cannot take holiday ever.");
+					}
+					
 					request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
 				}
 				
@@ -179,6 +276,48 @@ public class NewRequestServlet extends HttpServlet {
 				if(errorMessage!="") {
 					didHaveErrorMessage=true;
 					request.setAttribute("errorLoginMessage", "You are the only available "+errorMessage+" you cannot leave your people!");
+					
+					
+					
+					boolean didSecondErr=true;
+					//absoluteDuration
+					String aNewDate="Nan";
+					String aNewFinDate = "Nan";
+					int limit=0;
+					while(didSecondErr && limit<5) {
+						limit++;
+						Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Europe/London"));
+						cal.setTime(startDate);
+						String startyear=String.valueOf(cal.get(Calendar.YEAR));
+						String startMonth = "0"+String.valueOf(new Random().nextInt(9)+1);
+						String startDay = String.valueOf(new Random().nextInt(19)+10);
+						aNewDate = startyear+"-"+startMonth+"-"+startDay;
+						Date startNewDate = new SimpleDateFormat("yyyy-MM-dd").parse(aNewDate);
+						
+						cal.setTime(startNewDate);
+						cal.add(Calendar.DATE, absoluteDuration);
+						Date finNewDate = cal.getTime();
+						String finyear=String.valueOf(cal.get(Calendar.YEAR));
+						String finmonth=String.valueOf(cal.get(Calendar.MONTH)+1);
+						String finday=String.valueOf(cal.get(Calendar.DAY_OF_MONTH));
+						aNewFinDate = finyear+"-"+finmonth+"-"+finday;
+						
+						int[] condBreakerList2= holidayCondCheckingBean.holAllowanceForNonSpecs(startNewDate,finNewDate, listofAllDepBooking, thatEmployee, allEmpListPerDep);
+						
+						boolean didThirdErr=false;
+						for(int i : condBreakerList2) {
+							if(i==1) 
+								didThirdErr=true;
+						}
+						didSecondErr=didThirdErr;
+					}
+					
+					if (limit<5){
+						request.setAttribute("errorLoginMessage2", "You can choose this holiday: "+aNewDate+" to "+aNewFinDate);
+					}else {
+						request.setAttribute("errorLoginMessage2", "and you might probably be the only person, so you cannot take holiday ever.");
+					}
+					
 					request.getRequestDispatcher("/newrequest.jsp").forward(request, response);
 				}
 				

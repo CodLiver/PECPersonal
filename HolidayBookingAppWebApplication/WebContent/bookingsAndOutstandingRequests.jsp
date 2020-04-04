@@ -60,7 +60,7 @@ $(function() {
 			<th>Hol Remaining</th>
 			<th>(Dep) Head here</th>
 			<th>Exp. Staff here</th>
-			<th>60% Staff</th>
+			<th>4/60% Staff</th>
 		</tr>
 		<%
 			//String[] approved = {"Rejected", "Approved", "Pending"};

@@ -30,6 +30,11 @@
 				if (errMsg != null) {
 					out.print("<h5>" + errMsg + "</h5>");
 				}
+				
+				String errMsg2 = (String) request.getAttribute("errorLoginMessage2");
+				if (errMsg2 != null) {
+					out.print("<h5>" + errMsg2 + "</h5>");
+				}
 				%>
 
 			<button type="submit">Submit</button>

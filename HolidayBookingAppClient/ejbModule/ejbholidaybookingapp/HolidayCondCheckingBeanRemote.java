@@ -16,6 +16,7 @@ public interface HolidayCondCheckingBeanRemote {
 	int getMaxCanClashEmp(List<EmployeeDTO> allEmpListPerDep,boolean isPeak);
 	List<BookingDTO> getClashingBookingList(Date startDate,Date finDate, EmployeeDTO thatEmployee, List<BookingDTO> listofAllDepBooking);
 	//int[] calculateHolClashesAndConflicts(int[] condBreakerList, List<BookingDTO> clashingBookingList, EmployeeDTO thatEmployee, int maxCanClash, int roleConflictCount, int reqCheck_condition);
+	int[] calcAugBreak(int[] condBreakerList,Date startDate, Date finDate, List<EmployeeDTO> allEmpListPerDep, List<BookingDTO> clashingBookingList, int emp_id);
 	int[] holAllowanceForHeadDep(Date startDate,Date finDate, List<BookingDTO> listofAllDepBooking, EmployeeDTO thatEmployee,List<EmployeeDTO> allEmpListPerDep);
 	int[] holAllowanceForManSen(Date startDate,Date finDate, List<BookingDTO> listofAllDepBooking, EmployeeDTO thatEmployee,List<EmployeeDTO> allEmpListPerDep);
 	int[] holAllowanceForNonSpecs(Date startDate,Date finDate, List<BookingDTO> listofAllDepBooking, EmployeeDTO thatEmployee,List<EmployeeDTO> allEmpListPerDep);
