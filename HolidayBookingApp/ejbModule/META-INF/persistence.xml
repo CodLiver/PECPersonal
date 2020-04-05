@@ -7,5 +7,6 @@
 		<class>model.TEmployeeRole</class>
 		<class>model.TRequest</class>
 		<class>model.TBooking</class>
+		<class>model.TJmsAlert</class>
 	</persistence-unit>
 </persistence>

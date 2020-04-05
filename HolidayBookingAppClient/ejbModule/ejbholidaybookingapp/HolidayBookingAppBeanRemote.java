@@ -25,4 +25,5 @@ public interface HolidayBookingAppBeanRemote {
 	boolean deleteRequest(RequestDTO deleteReq);
 	boolean rejectRequest(RequestDTO rejectReq);
 	boolean addNewRequest(RequestDTO newReq);
+	boolean addNewJmsAlert(JmsAlertDTO jmsalert);
 }

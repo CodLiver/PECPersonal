@@ -15,7 +15,9 @@ import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.json.JsonObject;
+
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
@@ -28,6 +30,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.*;
 
+import javax.naming.*;
+import javax.jms.*;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -35,7 +40,24 @@ import ejbholidaybookingapp.BookingDTO;
 import ejbholidaybookingapp.EmployeeDTO;
 import ejbholidaybookingapp.HolidayBookingAppBeanRemote;
 import ejbholidaybookingapp.HolidayCondCheckingBeanRemote;
+//import ejbholidaybookingapp.HolidayRequestAlert;
 import ejbholidaybookingapp.RequestDTO;
+
+//import ejbholidaybookingapp.RequestAlert;
+import javax.annotation.Resource;
+
+
+
+@JMSDestinationDefinitions(
+	    value = {
+	        @JMSDestinationDefinition(
+	            name = "java:/queue/RequestDeliveryPoint",
+	            interfaceName = "javax.jms.Queue",
+	            destinationName = "RequestDeliveryPoint"
+	        )
+	    }
+	)
+
 
 
 @Path("con")
@@ -46,11 +68,17 @@ public class EmployeeConverter {
 	//http://java.boot.by/ocewsd6-guide/ch04.html
 	
 	
+    @Inject
+    private JMSContext context;
+	
 	@EJB
 	private HolidayBookingAppBeanRemote holidayBookingAppBean;
 	
 	@EJB
 	private HolidayCondCheckingBeanRemote holidayCondCheckingBean;
+	
+    @Resource(lookup = "java:/queue/RequestDeliveryPoint")
+    private Queue queue;
 	
 	
 	private String fileReader(String name) {
@@ -70,6 +98,34 @@ public class EmployeeConverter {
 		    
 		return s;
 	}
+	
+	
+	/*private String sendmsg() {
+		
+		try {
+        InitialContext ctx=new InitialContext();  
+        QueueConnectionFactory f=(QueueConnectionFactory)ctx.lookup("myQueueConnectionFactory");  
+        QueueConnection con=f.createQueueConnection();  
+        con.start();  
+        //2) create queue session  
+        QueueSession ses=con.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);  
+        //3) get the Queue object  
+        Queue t=(Queue)ctx.lookup("myQueue");  
+        //4)create QueueSender object         
+        QueueSender sender=ses.createSender(t);  
+        //5) create TextMessage object  
+        TextMessage msg=ses.createTextMessage();
+        
+        msg.setText("hello from send message");  
+        //7) send message  
+        sender.send(msg);
+        
+        }catch(Exception e) {
+        	e.printStackTrace();
+        }
+		
+		return "hey";
+	}*/
 	
 	@GET
 	@Path("/user/{name}/requests")
@@ -132,6 +188,8 @@ public class EmployeeConverter {
 	public Response sendRequest(InputStream incomingData) {//Response getFile() {
 		//https://www.tutorialspoint.com/ejb/ejb_message_driven_beans.htm
 		//https://www.javatpoint.com/message-driven-bean
+		
+		final Destination destination = queue;
 		
 		StringBuilder crunchifyBuilder = new StringBuilder();
 		try {
@@ -207,13 +265,21 @@ public class EmployeeConverter {
 				}
 				
 				if(absoluteDuration==0) {
-					RequestDTO newReq = new RequestDTO(0, converter.format(startDate).toString(), converter.format(finDate).toString(), absoluteDuration, remaining, thatEmployee.getId(), 0, 2);
+					
+					String sD82bsent=converter.format(startDate).toString();
+					String eD82bsent=converter.format(finDate).toString();
+					
+					RequestDTO newReq = new RequestDTO(0, sD82bsent, eD82bsent, absoluteDuration, remaining, thatEmployee.getId(), 0, 2);
 					holidayBookingAppBean.addNewRequest(newReq);
-	
+					
+					context.createProducer().send(destination, sD82bsent+"-"+eD82bsent+"-abs"+String.valueOf(absoluteDuration)+"-eid"+String.valueOf(thatEmployee.getId()));
+					
 					JSONObject json = new JSONObject();
 					json.put("error", "OK");
 					String message = json.toString();
 					return Response.ok(message).build();
+			
+					//check the message driven bean
 				}
 				
 				
@@ -276,8 +342,14 @@ public class EmployeeConverter {
 		
 
 				//if(!didHaveErrorMessage) { in case of any stupid duplications which I doubt due to returns 
-					RequestDTO newReq = new RequestDTO(0, converter.format(startDate).toString(), converter.format(finDate).toString(), absoluteDuration, remaining, thatEmployee.getId(), 0, 2);
+				
+					String sD82bsent=converter.format(startDate).toString();
+					String eD82bsent=converter.format(finDate).toString();
+					
+					RequestDTO newReq = new RequestDTO(0, sD82bsent,eD82bsent , absoluteDuration, remaining, thatEmployee.getId(), 0, 2);
 					holidayBookingAppBean.addNewRequest(newReq);
+					
+					context.createProducer().send(destination, sD82bsent+"-"+eD82bsent+"-abs"+String.valueOf(absoluteDuration)+"-eid"+String.valueOf(thatEmployee.getId()));
 					
 					JSONObject json = new JSONObject();
 					json.put("error", "OK");

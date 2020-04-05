@@ -14,6 +14,7 @@ import model.TDepartment;
 import model.TEmployee;
 import model.TEmployeeRole;
 import model.TRequest;
+import model.TJmsAlert;
 
 /**
  * Session Bean implementation class HolidayBookingAppEJB
@@ -249,6 +250,19 @@ public class HolidayBookingAppBean implements HolidayBookingAppBeanRemote {
 					newReq.getHoliday_remaining(), employee_id, newReq.getPeak_time(),
 					newReq.getStatus());
 			entityManager.persist(newRequest);
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	@Override
+	public boolean addNewJmsAlert(JmsAlertDTO jmsalert) {
+		System.out.println("helooooo addnewjmsalert"); 
+		try {			
+			TJmsAlert newJmsalert = new TJmsAlert(jmsalert.getReqname());
+			entityManager.persist(newJmsalert);
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
