@@ -1,4 +1,4 @@
-# PECPersonal
+# Programming Enterprise Components Coursework Personal Contribution
 Java based Holiday booking system.
 
 J2EE used. JSP, java beans, event queues. 
