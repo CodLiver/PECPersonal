@@ -1,4 +1,6 @@
 # PECPersonal
-personal pec
+Java based Holiday booking system.
 
-I hate this project,mkay?
+J2EE used. JSP, java beans, event queues. 
+
+simulation of employee booking system where it can raise alerts if employees in same department is not available etc. takes into consideration of Xmass Holidays.
